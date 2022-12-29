@@ -3,21 +3,29 @@ package com.example.android13photopicker
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
-import android.widget.MediaController
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android13photopicker.databinding.ActivityMainBinding
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var pickSingleMediaLauncher: ActivityResultLauncher<Intent>
+    private var player: ExoPlayer? = null
+
+    private var playWhenReady = true
+    private var currentItem = 0
+    private var playbackPosition = 0L
 
     @RequiresApi(33)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,14 +33,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         binding.imageView.visibility = View.GONE
         binding.videoPlayer.visibility = View.GONE
 
-        val mediaController = MediaController(this)
-        mediaController.setAnchorView(binding.videoPlayer);
-        binding.videoPlayer.setMediaController(mediaController);
+        releasePlayer()
+        initializeMediaPicker()
+        initButtonClickEvents()
+    }
 
+    private fun initializeMediaPicker() {
         // Initialize single media picker launcher
         pickSingleMediaLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -40,33 +49,34 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Failed picking media.", Toast.LENGTH_SHORT).show()
                 } else {
                     val uri = it.data?.data
-//                    showSnackBar("SUCCESS: ${uri?.path}")
 
                     val cR: ContentResolver = contentResolver
                     val type = uri?.let { it1 -> cR.getType(it1) }
+                    Log.d("MainActivity", "file type $type")
 
-                    type?.startsWith("image").let { isTrue ->
-                        binding.imageView.visibility = View.GONE
-                        binding.videoPlayer.visibility = View.GONE
-                        binding.tvHint.visibility = View.GONE
-                        if (isTrue!!) {
+                    binding.imageView.visibility = View.GONE
+                    binding.videoPlayer.visibility = View.GONE
+                    binding.tvHint.visibility = View.GONE
+                    when {
+                        type?.startsWith("image") == true -> {
                             binding.imageView.visibility = View.VISIBLE
                             binding.imageView.setImageURI(uri)
-                        } else {
+                        }
+                        type?.startsWith("video") == true -> {
                             binding.videoPlayer.visibility = View.VISIBLE
-                            binding.videoPlayer.setVideoURI(uri)
-                            binding.videoPlayer.start()
+                            initializePlayer(uri)
+                        }
+                        else                              -> {
+                            Toast.makeText(this, "Invalid file type", Toast.LENGTH_SHORT).show()
+                            binding.tvHint.visibility = View.VISIBLE
                         }
                     }
                 }
             }
-
-        initClickEvents()
     }
 
-
     @RequiresApi(33)
-    fun initClickEvents() {
+    private fun initButtonClickEvents() {
         // Setup pick image/video
         binding.buttonPickPhotoVideo.setOnClickListener { pickMedia("*") }
 
@@ -89,5 +99,30 @@ class MainActivity : AppCompatActivity() {
             }
         }
     )
+
+    private fun initializePlayer(uri: Uri?) {
+        player = ExoPlayer.Builder(this)
+            .build()
+            .also { exoPlayer ->
+                binding.videoPlayer.player = exoPlayer
+                val mediaItem = uri?.let { MediaItem.fromUri(it) }
+                mediaItem?.let {
+                    exoPlayer.setMediaItem(it)
+                    exoPlayer.playWhenReady = playWhenReady
+                    exoPlayer.seekTo(currentItem, playbackPosition)
+                    exoPlayer.prepare()
+                }
+            }
+    }
+
+    private fun releasePlayer() {
+        player?.let { exoPlayer ->
+            playbackPosition = exoPlayer.currentPosition
+            currentItem = exoPlayer.currentMediaItemIndex
+            playWhenReady = exoPlayer.playWhenReady
+            exoPlayer.release()
+        }
+        player = null
+    }
 
 }
