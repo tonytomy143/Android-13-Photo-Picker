@@ -5,7 +5,6 @@
 
 * Pick Gallery Images
 * Pick Gallery Videos
-* Any other mime types also supports
 * No Need of Storage Permission
 * Backward Compatible
 
