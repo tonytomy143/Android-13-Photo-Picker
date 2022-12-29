@@ -5,7 +5,9 @@
 
 * Pick Gallery Images
 * Pick Gallery Videos
-* No Need of Permission for Storage
+* Any other mime types also supports
+* No Need of Storage Permission
+* Backward Compatibility
 
 ## 🎬Preview
 
