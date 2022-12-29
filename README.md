@@ -10,9 +10,9 @@
 ## 🎬Preview
 
 
-   Profile Image Picker    |         Gallery Only      |       Camera Only        |
+   Image/Video Picker    |         Image Only      |       Video Only        |
 :-------------------------:|:-------------------------:|:-------------------------:
-![](https://github.com/Drjacky/ImagePicker/blob/master/art/imagepicker_profile_demo.gif)  |  ![](https://github.com/Drjacky/ImagePicker/blob/master/art/imagepicker_gallery_demo.gif)  |  ![](https://github.com/Drjacky/ImagePicker/blob/master/art/imagepicker_camera_demo.gif)
+![](https://github.com/screenshots/image_or_video.gif)  |  ![](https://github.com/Drjacky/ImagePicker/blob/master/art/imagepicker_gallery_demo.gif)  |  ![](https://github.com/Drjacky/ImagePicker/blob/master/art/imagepicker_camera_demo.gif)
 
 ## 💥Compatibility
 
