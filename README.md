@@ -12,7 +12,7 @@
 
    Image/Video Picker    |         Image Only      |       Video Only        |
 :-------------------------:|:-------------------------:|:-------------------------:
-![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/image_video.mp4)  |  ![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/image.mp4)  |  ![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/video.mp4)
+![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/image_video.gif)  |  ![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/image.gif)  |  ![](https://github.com/tonytomy143/Android-13-Photo-Picker/blob/master/Android13PhotoPicker/screenshots/video.gif)
 
 ## 💥Compatibility
 
