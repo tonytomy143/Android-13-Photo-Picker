@@ -1,34 +1,37 @@
 package com.example.android13photopicker
 
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.TextView
+import android.view.View
+import android.widget.MediaController
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android13photopicker.databinding.ActivityMainBinding
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var pickSingleMediaLauncher: ActivityResultLauncher<Intent>
-    private lateinit var pickMultipleMediaLauncher: ActivityResultLauncher<Intent>
-    private lateinit var exoPlayer: ExoPlayer
 
+    @RequiresApi(33)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
 
-        exoPlayer = ExoPlayer.Builder(this).build()
-        binding.exoPlayer.player = exoPlayer
+        binding.imageView.visibility = View.GONE
+        binding.videoPlayer.visibility = View.GONE
+
+        val mediaController = MediaController(this)
+        mediaController.setAnchorView(binding.videoPlayer);
+        binding.videoPlayer.setMediaController(mediaController);
 
         // Initialize single media picker launcher
         pickSingleMediaLauncher =
@@ -37,69 +40,54 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Failed picking media.", Toast.LENGTH_SHORT).show()
                 } else {
                     val uri = it.data?.data
-                    showSnackBar("SUCCESS: ${uri?.path}")
+//                    showSnackBar("SUCCESS: ${uri?.path}")
 
-                    binding.ivImage.setImageURI(uri)
-                }
-            }
+                    val cR: ContentResolver = contentResolver
+                    val type = uri?.let { it1 -> cR.getType(it1) }
 
-        // Initialize multiple media picker launcher
-        pickMultipleMediaLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                if (it.resultCode != Activity.RESULT_OK) {
-                    Toast.makeText(this, "Failed picking media.", Toast.LENGTH_SHORT).show()
-                } else {
-                    val uris = it.data?.clipData ?: return@registerForActivityResult
-                    var uriPaths = ""
-                    for (index in 0 until uris.itemCount) {
-                        uriPaths += uris.getItemAt(index).uri.path
-                        uriPaths += "\n"
+                    type?.startsWith("image").let { isTrue ->
+                        binding.imageView.visibility = View.GONE
+                        binding.videoPlayer.visibility = View.GONE
+                        binding.tvHint.visibility = View.GONE
+                        if (isTrue!!) {
+                            binding.imageView.visibility = View.VISIBLE
+                            binding.imageView.setImageURI(uri)
+                        } else {
+                            binding.videoPlayer.visibility = View.VISIBLE
+                            binding.videoPlayer.setVideoURI(uri)
+                            binding.videoPlayer.start()
+                        }
                     }
-                    showSnackBar("SUCCESS: $uriPaths")
                 }
             }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Setup pick 1 image/video
-            binding.buttonPickPhotoVideo.setOnClickListener {
-                pickSingleMediaLauncher.launch(
-                    Intent(MediaStore.ACTION_PICK_IMAGES)
-                )
-            }
-            // Setup pick image
-            binding.buttonPickPhoto.setOnClickListener {
-                pickSingleMediaLauncher.launch(
-                    Intent(MediaStore.ACTION_PICK_IMAGES)
-                        .apply {
-                            type = "image/*"
-                        }
-                )
-            }
-            // Setup pick video
-            binding.buttonPickVideo.setOnClickListener {
-                pickSingleMediaLauncher.launch(
-                    Intent(MediaStore.ACTION_PICK_IMAGES)
-                        .apply {
-                            type = "video/*"
-                        }
-                )
+        initClickEvents()
+    }
+
+
+    @RequiresApi(33)
+    fun initClickEvents() {
+        // Setup pick image/video
+        binding.buttonPickPhotoVideo.setOnClickListener { pickMedia("*") }
+
+        // Setup pick image
+        binding.buttonPickPhoto.setOnClickListener { pickMedia("image") }
+
+        // Setup pick video
+        binding.buttonPickVideo.setOnClickListener { pickMedia("video") }
+    }
+
+    @RequiresApi(33)
+    private fun pickMedia(mime_type: String) = pickSingleMediaLauncher.launch(
+        if (PhotoPickerAvailabilityChecker.isPhotoPickerAvailable()) {
+            Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+                type = "$mime_type/*"
             }
         } else {
-            Toast.makeText(this, "Please use Android 13 device.", Toast.LENGTH_SHORT).show()
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                type = "$mime_type/*"
+            }
         }
-
-    }
-
-    /**
-     * Shows [message] in a [Snackbar].
-     */
-    private fun showSnackBar(message: String) {
-        val snackBar =
-            Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
-        // Set the max lines of SnackBar
-        snackBar.view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).maxLines =
-            10
-        snackBar.show()
-    }
+    )
 
 }
