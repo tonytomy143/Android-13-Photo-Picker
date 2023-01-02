@@ -17,5 +17,4 @@
 
 ## 💥Compatibility
 
-  * Library - Android Nougat 7.0+ (API 24)
-  * Sample - Android TIRAMISU 33 (API 33)
+  * Required - Android TIRAMISU 33 (API 33)
